@@ -1,0 +1,156 @@
+# https://taskfile.dev
+
+version: '3'
+
+vars:
+  GOPROXY: 'https://goproxy.cn,direct'
+  GOSUMDB: sum.golang.google.cn
+  GIT_BRANCH: $(git branch -r --contains | head -1 | sed -E -e "s%(HEAD ->|origin|upstream)/?%%g" | xargs)
+  GIT_COMMIT: $(git rev-parse --short HEAD || echo "abcdefgh")
+  BUILD_DATE: $(date +%Y%m%d%H)
+  BUILD_RELEASE: $(cat version.txt || echo "1.0.0")
+  BIN_DIR: $(pwd)/bin
+  GOOS: $(go env GOOS)
+  GOARCH: $(go env GOARCH)
+  VERSION_PKG: github.com/easysoft/gitfox-webhook
+  LDFLAGS: "-w -s \
+    -X '{{.VERSION_PKG}}.Version={{.BUILD_RELEASE}}-{{.BUILD_DATE}}.{{.GIT_COMMIT}}' \
+    -X '{{.VERSION_PKG}}.BuildDate={{.BUILD_DATE}}' \
+    -X '{{.VERSION_PKG}}.GitBranch={{.GIT_BRANCH}}' \
+    -X '{{.VERSION_PKG}}.GitCommitHash={{.GIT_COMMIT}}'"
+
+tasks:
+
+  gencopyright:
+    desc: generate code license
+    cmds:
+      - go install github.com/google/addlicense@latest
+      - hack/scripts/gencopyright.sh
+
+  gofmt:
+    cmds:
+      - go install golang.org/x/tools/cmd/goimports@latest
+      - gofmt -s -w .
+      - goimports -w .
+
+  govulncheck:
+    desc: vulnerability detection
+    cmds:
+      - go install golang.org/x/vuln/cmd/govulncheck@v1.1.1
+      - govulncheck ./...
+
+  golint:
+    cmds:
+      - go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.57.2
+      - golangci-lint run -v ./...
+
+  gci:
+    cmds:
+      - go install github.com/daixiang0/gci@v0.13.1
+      - gci write --skip-generated --custom-order -s standard -s "prefix(github.com/easysoft/gitfox-webhook)" -s default -s blank -s dot .
+
+  devinit:
+    desc: Install git hooks to perform pre-commit checks
+    cmds:
+      - git config core.hooksPath .githooks
+      # - git config commit.template .gitmessage
+
+  gomod:
+    cmds:
+      - go mod tidy
+
+  lint:
+    desc: lint code
+    cmds:
+      - task: gomod
+      - task: gofmt
+      - task: gci
+      - task: golint
+      # - task: govulncheck
+
+  fmt:
+    desc: format code
+    run: once
+    cmds:
+      - task: gencopyright
+      - task: lint
+
+  # swag:
+  #   desc: generate swagger doc
+  #   cmds:
+  #     - go install github.com/swaggo/swag/cmd/swag@latest
+  #     - ./hack/scripts/gendocs.sh "{{.GIT_BRANCH}}-{{.GIT_COMMIT}}-{{.BUILD_DATE}}"
+
+  build:
+    desc: build binary
+    deps:
+      - web
+    cmds:
+      - CGO_ENABLED=1 GOOS={{.GOOS}} GOARCH={{.GOARCH}} go build -o "{{.BIN_DIR}}/gitfox_{{.GOOS}}_{{.GOARCH}}" -ldflags "{{.LDFLAGS}}" ./cmd/gitfox
+
+  config-local:
+    desc: try to create local config
+    run: once
+    cmds:
+      - cp .local.env.sample .local.env
+    status:
+      - test -f .local.env
+
+  run-local:
+    desc: debug run
+    dotenv: [".local.env"]
+    deps:
+      - config-local
+    cmds:
+      - CGO_ENABLED=1 go run -ldflags "{{.LDFLAGS}}" ./cmd/gitfox server
+
+  web-local:
+    desc: run web for devel
+    dir: web
+    cmds:
+      - yarn
+      - API_URL=http://127.0.0.1:3000 yarn dev-local
+
+  generate:
+    desc: generate code
+    cmds:
+      - ./scripts/wire/gitfox.sh
+
+  run:
+    desc: run binary
+    deps:
+      # - swag
+      - build
+    dotenv: [".local.env"]
+    cmds:
+      - "{{.BIN_DIR}}/gitfox_{{.GOOS}}_{{.GOARCH}} server"
+
+  web:
+    desc: build web
+    run: once
+    dir: web
+    cmds:
+      # - cat package.json | jq '.version="'1.0.0-{{.GIT_BRANCH}}-{{.GIT_COMMIT}}-{{.BUILD_DATE}}'"' > package.json.new
+      # - mv package.json.new package.json
+      - yarn config set registry https://registry.npmmirror.com
+      - yarn && yarn build
+    status:
+      - test -f dist/index.html
+
+  clean:
+    run: once
+    desc: clean
+    cmds:
+      - rm -rf "{{.BIN_DIR}}/gitfox_{{.GOOS}}_{{.GOARCH}}"
+      - rm -rf web/dist
+
+  docker:
+    desc: build docker image
+    cmds:
+      - docker buildx build --pull --push --platform linux/amd64 -t hub.qucheng.com/app/gitfox:{{.GIT_BRANCH}}-{{.GIT_COMMIT}}-{{.BUILD_DATE}} .
+
+  default:
+    cmds:
+      - task: clean
+      - task: web
+      - task: build
