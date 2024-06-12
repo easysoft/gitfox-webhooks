@@ -12,12 +12,6 @@ vars:
   BIN_DIR: $(pwd)/bin
   GOOS: $(go env GOOS)
   GOARCH: $(go env GOARCH)
-  VERSION_PKG: github.com/easysoft/gitfox-webhook
-  LDFLAGS: "-w -s \
-    -X '{{.VERSION_PKG}}.Version={{.BUILD_RELEASE}}-{{.BUILD_DATE}}.{{.GIT_COMMIT}}' \
-    -X '{{.VERSION_PKG}}.BuildDate={{.BUILD_DATE}}' \
-    -X '{{.VERSION_PKG}}.GitBranch={{.GIT_BRANCH}}' \
-    -X '{{.VERSION_PKG}}.GitCommitHash={{.GIT_COMMIT}}'"
 
 tasks:
 
@@ -47,13 +41,7 @@ tasks:
   gci:
     cmds:
       - go install github.com/daixiang0/gci@v0.13.1
-      - gci write --skip-generated --custom-order -s standard -s "prefix(github.com/easysoft/gitfox-webhook)" -s default -s blank -s dot .
-
-  devinit:
-    desc: Install git hooks to perform pre-commit checks
-    cmds:
-      - git config core.hooksPath .githooks
-      # - git config commit.template .gitmessage
+      - gci write --skip-generated --custom-order -s standard -s "prefix(github.com/easysoft/gitfox-webhooks)" -s default -s blank -s dot .
 
   gomod:
     cmds:
@@ -75,82 +63,12 @@ tasks:
       - task: gencopyright
       - task: lint
 
-  # swag:
-  #   desc: generate swagger doc
-  #   cmds:
-  #     - go install github.com/swaggo/swag/cmd/swag@latest
-  #     - ./hack/scripts/gendocs.sh "{{.GIT_BRANCH}}-{{.GIT_COMMIT}}-{{.BUILD_DATE}}"
-
-  build:
-    desc: build binary
-    deps:
-      - web
-    cmds:
-      - CGO_ENABLED=1 GOOS={{.GOOS}} GOARCH={{.GOARCH}} go build -o "{{.BIN_DIR}}/gitfox_{{.GOOS}}_{{.GOARCH}}" -ldflags "{{.LDFLAGS}}" ./cmd/gitfox
-
-  config-local:
-    desc: try to create local config
-    run: once
-    cmds:
-      - cp .local.env.sample .local.env
-    status:
-      - test -f .local.env
-
-  run-local:
-    desc: debug run
-    dotenv: [".local.env"]
-    deps:
-      - config-local
-    cmds:
-      - CGO_ENABLED=1 go run -ldflags "{{.LDFLAGS}}" ./cmd/gitfox server
-
-  web-local:
-    desc: run web for devel
-    dir: web
-    cmds:
-      - yarn
-      - API_URL=http://127.0.0.1:3000 yarn dev-local
-
-  generate:
-    desc: generate code
-    cmds:
-      - ./scripts/wire/gitfox.sh
-
   run:
-    desc: run binary
-    deps:
-      # - swag
-      - build
-    dotenv: [".local.env"]
+    desc: debug run
     cmds:
-      - "{{.BIN_DIR}}/gitfox_{{.GOOS}}_{{.GOARCH}} server"
-
-  web:
-    desc: build web
-    run: once
-    dir: web
-    cmds:
-      # - cat package.json | jq '.version="'1.0.0-{{.GIT_BRANCH}}-{{.GIT_COMMIT}}-{{.BUILD_DATE}}'"' > package.json.new
-      # - mv package.json.new package.json
-      - yarn config set registry https://registry.npmmirror.com
-      - yarn && yarn build
-    status:
-      - test -f dist/index.html
-
-  clean:
-    run: once
-    desc: clean
-    cmds:
-      - rm -rf "{{.BIN_DIR}}/gitfox_{{.GOOS}}_{{.GOARCH}}"
-      - rm -rf web/dist
-
-  docker:
-    desc: build docker image
-    cmds:
-      - docker buildx build --pull --push --platform linux/amd64 -t hub.qucheng.com/app/gitfox:{{.GIT_BRANCH}}-{{.GIT_COMMIT}}-{{.BUILD_DATE}} .
+      - go run ./example/example.go
 
   default:
     cmds:
-      - task: clean
-      - task: web
-      - task: build
+      - task: fmt
+      - task: run
