@@ -1,3 +1,9 @@
+// Copyright (c) 2024 北京渠成软件有限公司(Beijing Qucheng Software Co., Ltd. www.qucheng.com) All rights reserved.
+// Use of this source code is covered by the following dual licenses:
+// (1) Z PUBLIC LICENSE 1.2 (ZPL 1.2)
+// (2) Affero General Public License 3.0 (AGPL 3.0)
+// license that can be found in the LICENSE file.
+
 package gitfox
 
 import (
@@ -35,12 +41,15 @@ const (
 	TagDeletedEvent HookEventType = "tag_deleted"
 	TagUpdatedEvent HookEventType = "tag_updated"
 
-	PullReqCreatedEvent   HookEventType = "pullreq_created"
-	PullReqReopened       HookEventType = "pullreq_reopened"
-	PullReqBranchUpdated  HookEventType = "pullreq_branch_updated"
-	PullReqClosed         HookEventType = "pullreq_closed"
-	PullReqCommentCreated HookEventType = "pullreq_comment_created"
-	PullReqMerged         HookEventType = "pullreq_merged"
+	PullReqCreatedEvent         HookEventType = "pullreq_created"
+	PullReqReopenedEvent        HookEventType = "pullreq_reopened"
+	PullReqBranchUpdatedEvent   HookEventType = "pullreq_branch_updated"
+	PullReqClosedEvent          HookEventType = "pullreq_closed"
+	PullReqCommentCreatedEvent  HookEventType = "pullreq_comment_created"
+	PullReqMergedEvent          HookEventType = "pullreq_merged"
+	PullReqReviewerCreatedEvent HookEventType = "pullreq_reviewer_created"
+	PullReqReviewerDeletedEvent HookEventType = "pullreq_reviewer_deleted"
+	PullReqReviewSubmittedEvent HookEventType = "pullreq_review_submitted"
 )
 
 // Option is a configuration option for the webhook
@@ -124,12 +133,12 @@ func (hook Webhook) Parse(r *http.Request, events ...HookEventType) (interface{}
 		}
 	}
 	switch gitfoxEvent {
-	case BranchUpdatedEvent:
-		var pl BranchUpdatedPayload
-		err = json.Unmarshal([]byte(payload), &pl)
-		return pl, err
 	case BranchCreatedEvent:
 		var pl BranchCreatedPayload
+		err = json.Unmarshal([]byte(payload), &pl)
+		return pl, err
+	case BranchUpdatedEvent:
+		var pl BranchUpdatedPayload
 		err = json.Unmarshal([]byte(payload), &pl)
 		return pl, err
 	case BranchDeletedEvent:
@@ -138,6 +147,50 @@ func (hook Webhook) Parse(r *http.Request, events ...HookEventType) (interface{}
 		return pl, err
 	case TagCreatedEvent:
 		var pl TagCreatedPayload
+		err = json.Unmarshal([]byte(payload), &pl)
+		return pl, err
+	case TagUpdatedEvent:
+		var pl TagUpdatedPayload
+		err = json.Unmarshal([]byte(payload), &pl)
+		return pl, err
+	case TagDeletedEvent:
+		var pl TagDeletedPayload
+		err = json.Unmarshal([]byte(payload), &pl)
+		return pl, err
+	case PullReqCreatedEvent:
+		var pl PullReqCreatedPayload
+		err = json.Unmarshal([]byte(payload), &pl)
+		return pl, err
+	case PullReqReopenedEvent:
+		var pl PullReqReopenedPayload
+		err = json.Unmarshal([]byte(payload), &pl)
+		return pl, err
+	case PullReqBranchUpdatedEvent:
+		var pl PullReqBranchUpdatedPayload
+		err = json.Unmarshal([]byte(payload), &pl)
+		return pl, err
+	case PullReqClosedEvent:
+		var pl PullReqClosedPayload
+		err = json.Unmarshal([]byte(payload), &pl)
+		return pl, err
+	case PullReqCommentCreatedEvent:
+		var pl PullReqCommentPayload
+		err = json.Unmarshal([]byte(payload), &pl)
+		return pl, err
+	case PullReqMergedEvent:
+		var pl PullReqMergedPayload
+		err = json.Unmarshal([]byte(payload), &pl)
+		return pl, err
+	case PullReqReviewerCreatedEvent:
+		var pl PullReqReviewerCreatedPayload
+		err = json.Unmarshal([]byte(payload), &pl)
+		return pl, err
+	case PullReqReviewerDeletedEvent:
+		var pl PullReqReviewerDeletedPayload
+		err = json.Unmarshal([]byte(payload), &pl)
+		return pl, err
+	case PullReqReviewSubmittedEvent:
+		var pl PullReqReviewSubmittedPayload
 		err = json.Unmarshal([]byte(payload), &pl)
 		return pl, err
 	default:
