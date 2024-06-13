@@ -180,6 +180,7 @@ type ReviewerSegment struct {
 
 type PullReqReviewSubmittedPayload struct {
 	BaseSegment
+	PullReqSegment
 	Author   *PrincipalInfo
 	Reviewer *PrincipalInfo
 	Decision string

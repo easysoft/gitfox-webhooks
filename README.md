@@ -22,7 +22,6 @@ import "github.com/easysoft/gitfox-webhooks"
 package main
 
 import (
- "log"
  "net/http"
 
  "github.com/easysoft/gitfox-webhooks/gitfox"
