@@ -1,0 +1,55 @@
+name: check
+
+env:
+  # Common versions
+  GO_VERSION: '1.22'
+  TZ: Asia/Shanghai
+
+permissions: write-all
+
+on:
+  push:
+    branches:
+      - '*'
+    paths:
+      - '**.go'
+      - 'go.mod'
+      - '.github/workflows/*.yml'
+  pull_request:
+    branches:
+      - "*"
+    paths:
+      - '**.go'
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          check-latest: true
+      - name: Cache Go Dependencies
+        uses: magnetikonline/action-golang-cache@v5
+        with:
+          go-version-file: go.mod
+      - name: install task
+        run: |
+          echo "install task"
+          go install github.com/go-task/task/v3/cmd/task@latest
+      - name: Run Linter
+        run: |
+          task lint
+          modifyCode=$(git status  -s | grep M | wc -l)
+          git status  -s
+          if [ $modifyCode -eq 0 ] ; then
+              echo "Lic check ok"
+          else
+              echo "Failed git modify files num is $modifyCode. Lic check error,please exec 'task gencopyright' in your code "
+              exit -1
+          fi
