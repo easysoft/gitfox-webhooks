@@ -7,20 +7,14 @@
 package main
 
 import (
-	"io"
 	"log"
 	"net/http"
 
 	"github.com/easysoft/gitfox-webhooks/gitfox"
-
-	"github.com/davecgh/go-spew/spew"
 )
 
 // 接受所有webhook请求,并打印请求内容
 func webhookHandler(w http.ResponseWriter, r *http.Request) {
-	body, _ := io.ReadAll(r.Body)
-	log.Printf("request body: %s", body)
-	spew.Dump(r.Header)
 	hook, _ := gitfox.New()
 	payload, err := hook.Parse(r,
 		gitfox.BranchCreatedEvent, gitfox.BranchUpdatedEvent, gitfox.BranchDeletedEvent,
