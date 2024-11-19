@@ -1,6 +1,6 @@
-# Gitfox Library Webhooks
+# GitFox Library Webhooks
 
-Library webhooks allows for easy receiving and parsing of Gitfox Webhook Events
+Library webhooks allows for easy receiving and parsing of GitFox Webhook Events
 
 ## Installation
 
@@ -28,7 +28,7 @@ import (
 )
 
 func main() {
- hook, _ := gitfox.New(gitfox.Options.Secret("MyGitfoxSecret...?"))
+ hook, _ := gitfox.New(gitfox.Options.Secret("MyGitFoxSecret...?"))
 
  http.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
   payload, err := hook.Parse(r, gitfox.BranchUpdatedEvent)

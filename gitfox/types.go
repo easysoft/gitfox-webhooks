@@ -67,16 +67,19 @@ type ReferencePayload struct {
 	ReferenceUpdateSegment
 }
 
+// BaseSegment is the common segment for all payloads.
 type BaseSegment struct {
 	Trigger   string        `json:"trigger"`
 	Repo      Repo          `json:"repo"`
 	Principal PrincipalInfo `json:"principal"`
 }
 
+// ReferenceSegment contains the reference info for webhooks.
 type ReferenceSegment struct {
 	Ref ReferenceInfo `json:"ref"`
 }
 
+// ReferenceDetailsSegment contains extra details for reference related payloads for webhooks.
 type ReferenceDetailsSegment struct {
 	SHA string `json:"sha"`
 
@@ -89,6 +92,7 @@ type ReferenceDetailsSegment struct {
 	Commit *CommitInfo `json:"commit,omitempty"`
 }
 
+// ReferenceUpdateSegment contains extra details for reference update related payloads for webhooks.
 type ReferenceUpdateSegment struct {
 	OldSHA string `json:"old_sha"`
 	Forced bool   `json:"forced"`
@@ -174,14 +178,39 @@ type PullReqReviewerChangedPayload struct {
 	ReviewerSegment
 }
 
+// ReviewerSegment contains details for all reviewer related payloads for webhooks.
 type ReviewerSegment struct {
 	Reviewer PrincipalInfo `json:"reviewer"`
+}
+
+type PullReqReviewSegment struct {
+	ReviewDecision string        `json:"review_decision"`
+	ReviewerInfo   PrincipalInfo `json:"reviewer"`
 }
 
 type PullReqReviewSubmittedPayload struct {
 	BaseSegment
 	PullReqSegment
-	Author   *PrincipalInfo
-	Reviewer *PrincipalInfo
-	Decision string
+	PullReqTargetReferenceSegment
+	ReferenceSegment
+	PullReqReviewSegment
+}
+
+// PullReqUpdateSegment contains details what has been updated in the pull request.
+type PullReqUpdateSegment struct {
+	TitleChanged       bool   `json:"title_changed"`
+	TitleOld           string `json:"title_old"`
+	TitleNew           string `json:"title_new"`
+	DescriptionChanged bool   `json:"description_changed"`
+	DescriptionOld     string `json:"description_old"`
+	DescriptionNew     string `json:"description_new"`
+}
+
+// PullReqUpdatedPayload describes the body of the pullreq updated trigger.
+type PullReqUpdatedPayload struct {
+	BaseSegment
+	PullReqSegment
+	PullReqTargetReferenceSegment
+	ReferenceSegment
+	PullReqUpdateSegment
 }

@@ -21,10 +21,10 @@ import (
 var (
 	ErrEventNotSpecifiedToParse             = errors.New("no Event specified to parse")
 	ErrInvalidHTTPMethod                    = errors.New("invalid HTTP Method")
-	ErrMissingGitfoxEventHeader             = errors.New("missing X-Gitfox-Event Header")
-	ErrMissingGitfoxTriggerHeader           = errors.New("missing X-Gitfox-Trigger Header")
-	ErrMissingGitfoxWebhookParentTypeHeader = errors.New("missing Webhook-Parent-Type Header")
-	ErrMissingGitfoxSignatureHeader         = errors.New("missing X-Gitfox-Signature Header")
+	ErrMissingGitFoxEventHeader             = errors.New("missing X-Gitfox-Event Header")
+	ErrMissingGitFoxTriggerHeader           = errors.New("missing X-Gitfox-Trigger Header")
+	ErrMissingGitFoxWebhookParentTypeHeader = errors.New("missing Webhook-Parent-Type Header")
+	ErrMissingGitFoxSignatureHeader         = errors.New("missing X-Gitfox-Signature Header")
 	ErrEventNotFound                        = errors.New("event not defined to be parsed")
 	ErrParsingPayload                       = errors.New("error parsing payload")
 	ErrHMACVerificationFailed               = errors.New("HMAC verification failed")
@@ -50,6 +50,7 @@ const (
 	PullReqReviewerCreatedEvent HookEventType = "pullreq_reviewer_created"
 	PullReqReviewerDeletedEvent HookEventType = "pullreq_reviewer_deleted"
 	PullReqReviewSubmittedEvent HookEventType = "pullreq_review_submitted"
+	PullReqUpdatedEvent         HookEventType = "pullreq_updated"
 )
 
 // Option is a configuration option for the webhook
@@ -100,7 +101,7 @@ func (hook Webhook) Parse(r *http.Request, events ...HookEventType) (interface{}
 	}
 	event := r.Header.Get("X-Gitfox-Trigger")
 	if len(event) == 0 {
-		return nil, ErrMissingGitfoxTriggerHeader
+		return nil, ErrMissingGitFoxTriggerHeader
 	}
 	gitfoxEvent := HookEventType(event)
 	var found bool
@@ -122,7 +123,7 @@ func (hook Webhook) Parse(r *http.Request, events ...HookEventType) (interface{}
 	if len(hook.secret) > 0 {
 		signature := r.Header.Get("X-Gitfox-Signature")
 		if len(signature) == 0 {
-			return nil, ErrMissingGitfoxSignatureHeader
+			return nil, ErrMissingGitFoxSignatureHeader
 		}
 		sig256 := hmac.New(sha256.New, []byte(hook.secret))
 		_, _ = io.Writer(sig256).Write([]byte(payload))
@@ -179,6 +180,10 @@ func (hook Webhook) Parse(r *http.Request, events ...HookEventType) (interface{}
 		return pl, err
 	case PullReqMergedEvent:
 		var pl PullReqMergedPayload
+		err = json.Unmarshal([]byte(payload), &pl)
+		return pl, err
+	case PullReqUpdatedEvent:
+		var pl PullReqUpdatedPayload
 		err = json.Unmarshal([]byte(payload), &pl)
 		return pl, err
 	case PullReqReviewerCreatedEvent:
