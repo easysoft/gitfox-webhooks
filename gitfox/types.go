@@ -161,12 +161,33 @@ type PullReqCommentPayload struct {
 
 type PullReqCommentSegment struct {
 	CommentInfo CommentInfo `json:"comment"`
+	*CodeCommentInfo
+}
+
+// PullReqCommentUpdatedSegment contains details for pullreq text comment edited payloads for webhooks.
+type PullReqCommentUpdatedSegment struct {
+	CommentInfo
+	*CodeCommentInfo
 }
 
 type CommentInfo struct {
 	ID       int64  `json:"id"`
 	ParentID *int64 `json:"parent_id,omitempty"`
 	Text     string `json:"text"`
+	Created  int64  `json:"created"`
+	Updated  int64  `json:"updated"`
+	Kind     string `json:"kind"`
+}
+
+type CodeCommentInfo struct {
+	Outdated     bool   `json:"outdated"`
+	MergeBaseSHA string `json:"merge_base_sha"`
+	SourceSHA    string `json:"source_sha"`
+	Path         string `json:"path"`
+	LineNew      int    `json:"line_new"`
+	SpanNew      int    `json:"span_new"`
+	LineOld      int    `json:"line_old"`
+	SpanOld      int    `json:"span_old"`
 }
 
 type PullReqReviewerCreatedPayload PullReqReviewerChangedPayload
@@ -213,4 +234,13 @@ type PullReqUpdatedPayload struct {
 	PullReqTargetReferenceSegment
 	ReferenceSegment
 	PullReqUpdateSegment
+}
+
+// PullReqCommentUpdatedPayload describes the body of the pullreq comment create trigger.
+type PullReqCommentUpdatedPayload struct {
+	BaseSegment
+	PullReqSegment
+	PullReqTargetReferenceSegment
+	ReferenceSegment
+	PullReqCommentSegment
 }

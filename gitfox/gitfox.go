@@ -41,11 +41,13 @@ const (
 	TagDeletedEvent HookEventType = "tag_deleted"
 	TagUpdatedEvent HookEventType = "tag_updated"
 
-	PullReqCreatedEvent         HookEventType = "pullreq_created"
-	PullReqReopenedEvent        HookEventType = "pullreq_reopened"
-	PullReqBranchUpdatedEvent   HookEventType = "pullreq_branch_updated"
-	PullReqClosedEvent          HookEventType = "pullreq_closed"
-	PullReqCommentCreatedEvent  HookEventType = "pullreq_comment_created"
+	PullReqCreatedEvent        HookEventType = "pullreq_created"
+	PullReqReopenedEvent       HookEventType = "pullreq_reopened"
+	PullReqBranchUpdatedEvent  HookEventType = "pullreq_branch_updated"
+	PullReqClosedEvent         HookEventType = "pullreq_closed"
+	PullReqCommentCreatedEvent HookEventType = "pullreq_comment_created"
+	PullReqCommentUpdatedEvent HookEventType = "pullreq_comment_updated"
+	// PullReqCommentStatusUpdated HookEventType = "pullreq_comment_status_updated"
 	PullReqMergedEvent          HookEventType = "pullreq_merged"
 	PullReqReviewerCreatedEvent HookEventType = "pullreq_reviewer_created"
 	PullReqReviewerDeletedEvent HookEventType = "pullreq_reviewer_deleted"
@@ -176,6 +178,10 @@ func (hook Webhook) Parse(r *http.Request, events ...HookEventType) (interface{}
 		return pl, err
 	case PullReqCommentCreatedEvent:
 		var pl PullReqCommentPayload
+		err = json.Unmarshal([]byte(payload), &pl)
+		return pl, err
+	case PullReqCommentUpdatedEvent:
+		var pl PullReqCommentUpdatedPayload
 		err = json.Unmarshal([]byte(payload), &pl)
 		return pl, err
 	case PullReqMergedEvent:
