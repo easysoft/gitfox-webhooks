@@ -22,6 +22,7 @@ func webhookHandler(w http.ResponseWriter, r *http.Request) {
 		gitfox.PullReqCreatedEvent, gitfox.PullReqReopenedEvent, gitfox.PullReqBranchUpdatedEvent,
 		gitfox.PullReqClosedEvent, gitfox.PullReqCommentCreatedEvent, gitfox.PullReqMergedEvent,
 		gitfox.PullReqReviewerCreatedEvent, gitfox.PullReqReviewerDeletedEvent, gitfox.PullReqReviewSubmittedEvent,
+		gitfox.PullReqRequiredChecksPassedEvent,
 	)
 	if err != nil {
 		if err == gitfox.ErrEventNotFound {

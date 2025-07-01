@@ -48,11 +48,12 @@ const (
 	PullReqCommentCreatedEvent HookEventType = "pullreq_comment_created"
 	PullReqCommentUpdatedEvent HookEventType = "pullreq_comment_updated"
 	// PullReqCommentStatusUpdated HookEventType = "pullreq_comment_status_updated"
-	PullReqMergedEvent          HookEventType = "pullreq_merged"
-	PullReqReviewerCreatedEvent HookEventType = "pullreq_reviewer_created"
-	PullReqReviewerDeletedEvent HookEventType = "pullreq_reviewer_deleted"
-	PullReqReviewSubmittedEvent HookEventType = "pullreq_review_submitted"
-	PullReqUpdatedEvent         HookEventType = "pullreq_updated"
+	PullReqMergedEvent               HookEventType = "pullreq_merged"
+	PullReqReviewerCreatedEvent      HookEventType = "pullreq_reviewer_created"
+	PullReqRequiredChecksPassedEvent HookEventType = "pullreq_required_checks_passed"
+	PullReqReviewerDeletedEvent      HookEventType = "pullreq_reviewer_deleted"
+	PullReqReviewSubmittedEvent      HookEventType = "pullreq_review_submitted"
+	PullReqUpdatedEvent              HookEventType = "pullreq_updated"
 )
 
 // Option is a configuration option for the webhook
@@ -192,7 +193,7 @@ func (hook Webhook) Parse(r *http.Request, events ...HookEventType) (interface{}
 		var pl PullReqUpdatedPayload
 		err = json.Unmarshal([]byte(payload), &pl)
 		return pl, err
-	case PullReqReviewerCreatedEvent:
+	case PullReqReviewerCreatedEvent, PullReqRequiredChecksPassedEvent:
 		var pl PullReqReviewerCreatedPayload
 		err = json.Unmarshal([]byte(payload), &pl)
 		return pl, err
